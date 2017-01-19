@@ -28,4 +28,40 @@ class Participant < Sequel::Model
 
 		res.first
 	end
+
+
+	def self.search(params)
+		size       = params[:limit].to_i || 10
+		page       = params[:page].to_i || 1
+		keyword    = params[:keyword] || nil
+		attributes = params[:attributes] || nil
+
+		if keyword || attributes
+			# SEARCH
+			if keyword
+				if attributes
+					Participant.where(
+						(Sequel.like(:first_name, "%#{keyword}%")) |
+						(Sequel.like(:last_name, "%#{keyword}%")) |
+						(Sequel.like(:email, "%#{keyword}%")) &
+						(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
+					).paginate(page, size)
+				else
+					Participant.where(
+						(Sequel.like(:first_name, "%#{keyword}%")) |
+						(Sequel.like(:last_name, "%#{keyword}%")) |
+						(Sequel.like(:email, "%#{keyword}%"))
+					).paginate(page, size)
+				end
+			else
+				Participant.where(
+					(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
+				).paginate(page, size)
+			end
+		else
+			# ALL
+			Participant.dataset.paginate(page, size)
+		end
+	end
+
 end

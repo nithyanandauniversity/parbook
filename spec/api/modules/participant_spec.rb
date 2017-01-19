@@ -52,6 +52,69 @@ describe "Participant" do
       expect(participant.contact.value).to eql("454625363")
    end
 
+   it "should be able to search participant by name or email" do
+      Participant.all.each { |p| p.destroy }
+
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male")
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male")
+
+      get "/api/v1/participant", search: {
+         page: 1,
+         limit: 10,
+         keyword: 'psenthu'
+      }
+
+      response = JSON.parse(last_response.body)
+
+      expect(response.length).to eql 1
+      expect(response[0]['email']).to eql "psenthu@gmail.com"
+      expect(response[0]['first_name']).to eql "Senthuran"
+   end
+
+   it "should be able to search participants by participant_attributes" do
+      Participant.all.each { |p| p.destroy }
+
+      user1 = Participant.create({
+         first_name: "Saravana",
+         last_name: "Balaraj",
+         email: "sgsaravana@gmail.com",
+         gender: "Male",
+         participant_attributes: {
+            ia_graduate: true,
+            healer: true
+         }.to_s
+      })
+      user2 = Participant.create({
+         first_name: "Senthuran",
+         last_name: "Ponnampalam",
+         email: "psenthu@gmail.com",
+         gender: "Male",
+         participant_attributes: {
+            ia_graduate: false,
+            healer: false
+         }.to_s
+      })
+
+      get "/api/v1/participant", search: {
+         page: 1,
+         limit: 10,
+         attributes: [":ia_graduate=>true", ":healer=>true"]
+      }
+
+      response = JSON.parse(last_response.body)
+
+      expect(response.length).to eql 1
+      expect(response[0]['email']).to eql "sgsaravana@gmail.com"
+      expect(response[0]['first_name']).to eql "Saravana"
+
+      # puts response[0]['participant_attributes'].to_json
+      # puts response[0]['participant_attributes']
+      attributes = eval(response[0]['participant_attributes'])
+      # puts attributes[:ia_graduate]
+      expect(attributes[:ia_graduate]).to eql true
+      expect(attributes[:healer]).to eql true
+   end
+
    it "should be able to edit participant" do
 
       post '/api/v1/participant',

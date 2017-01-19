@@ -2,6 +2,11 @@ module Parbook
 
 	class ParticipantsAPI < Grape::API
 		namespace "participant" do
+
+			get do
+				return Participant.search(params[:search])
+			end
+
 			post do
 				participant = Participant.create(params[:participant])
 				default_update = {}
