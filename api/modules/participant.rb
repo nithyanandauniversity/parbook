@@ -9,6 +9,9 @@ module Parbook
 
 			post do
 				participant = Participant.create(params[:participant])
+				uuid        = SecureRandom.uuid
+				member_id   = participant.created_at.strftime('%Y%m%d') + '-' + SecureRandom.hex(4)
+				participant.update({uuid: uuid, member_id: member_id})
 				default_update = {}
 
 				if params[:addresses]
@@ -55,11 +58,11 @@ module Parbook
 
 			put "/:id" do
 				participant = Participant.find(id: params[:id])
-				participant.update(params[:participant])
+				participant.update(params.participant)
 
 				default_update = {}
 
-				if params[:addresses]
+				if params.addresses
 					Sequel::Model.db.transaction do
 						participant.addresses.delete
 
@@ -81,7 +84,7 @@ module Parbook
 					end
 				end
 
-				if params[:contacts]
+				if params.contacts
 					Sequel::Model.db.transaction do
 						participant.contacts.delete
 						params[:contacts].each do |_contact|
@@ -136,10 +139,21 @@ module Parbook
 			end
 
 			delete "/:id" do
-				participant = Participant.find(id: params[:id])
-				participant.addresses.destroy
-				participant.contacts.destroy
-				participant.destroy
+				unless params[:id] == "delete_all"
+					participant = Participant.find(id: params[:id])
+					participant.addresses.destroy
+					participant.contacts.destroy
+					participant.destroy
+				else
+					count = 0
+					Participant.each do |participant|
+						participant.addresses.destroy
+						participant.contacts.destroy
+						count += 1 if participant.destroy
+					end
+
+					count
+				end
 			end
 
 		end
