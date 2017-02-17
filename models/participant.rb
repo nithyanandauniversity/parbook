@@ -1,6 +1,13 @@
 class Participant < Sequel::Model
 	self.plugin :timestamps
 
+	MKT_NONE      = 0
+	MKT_VOLUNTEER = 1
+	MKT_THANEDAR  = 2
+	MKT_KOTARI    = 3
+	MKT_MAHANT    = 4
+	MKT_SRIMAHANT = 5
+
 	def addresses
 		Address.where(participant_uuid: uuid)
 	end
@@ -31,10 +38,10 @@ class Participant < Sequel::Model
 
 
 	def self.search(params)
-		size       = params[:limit].to_i || 10
-		page       = params[:page].to_i || 1
-		keyword    = params[:keyword] || nil
-		attributes = params[:attributes] || nil
+		size       = params && params[:limit].to_i || 10
+		page       = params && params[:page].to_i || 1
+		keyword    = params && params[:keyword] || nil
+		attributes = params && params[:attributes] || nil
 
 		if keyword || attributes
 			# SEARCH

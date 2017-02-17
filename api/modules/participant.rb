@@ -7,6 +7,14 @@ module Parbook
 				return Participant.search(params[:search])
 			end
 
+			get '/:id' do
+				participant             = Participant.find({id: params[:id]})
+				participant[:contacts]  = participant.contacts
+				participant[:addresses] = participant.addresses
+
+				participant
+			end
+
 			post do
 				participant = Participant.create(params[:participant])
 				uuid        = SecureRandom.uuid
