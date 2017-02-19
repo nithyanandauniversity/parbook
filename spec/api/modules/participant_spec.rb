@@ -61,10 +61,10 @@ describe "Participant" do
       get "/api/v1/participant", search: {
          page: 1,
          limit: 10,
-         keyword: 'psenthu'
+         keyword: 'senthuran'
       }
 
-      response = JSON.parse(last_response.body)
+      response = JSON.parse(last_response.body)[0]['participants']
 
       expect(response.length).to eql 1
       expect(response[0]['email']).to eql "psenthu@gmail.com"
@@ -101,7 +101,7 @@ describe "Participant" do
          attributes: [":ia_graduate=>true", ":healer=>true"]
       }
 
-      response = JSON.parse(last_response.body)
+      response = JSON.parse(last_response.body)[0]['participants']
 
       expect(response.length).to eql 1
       expect(response[0]['email']).to eql "sgsaravana@gmail.com"
@@ -208,9 +208,9 @@ describe "Participant" do
       expect(_participant.contact.contact_type).to eql("Mobile")
       expect(_participant.contact.value).to eql("454625363")
 
-      address_id = _participant.addresses.last.id
+      address = _participant.addresses.last
 
-      delete "/api/v1/participant/#{_participant.id}/address/#{address_id}"
+      delete "/api/v1/participant/#{_participant.id}/address/#{address.id}"
 
       participant = Participant.find(id: _participant.id)
 

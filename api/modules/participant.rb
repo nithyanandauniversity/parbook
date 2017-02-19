@@ -33,7 +33,7 @@ module Parbook
 							country: _address.country,
 							participant_uuid: participant.uuid
 						})
-						default_update[:default_address] = address.id if _address[:default]
+						default_update[:default_address] = address.id if [true, 'true'].include?(_address[:default])
 					end
 
 					if !default_update[:default_address]
@@ -49,7 +49,7 @@ module Parbook
 							value: _contact.value,
 							participant_uuid: participant.uuid
 						})
-						default_update[:default_contact] = contact.id if _contact[:default]
+						default_update[:default_contact] = contact.id if [true, 'true'].include?(_contact[:default])
 					end
 
 					if !default_update[:default_contact]
@@ -83,7 +83,7 @@ module Parbook
 								country: _address.country,
 								participant_uuid: participant.uuid
 							})
-							default_update[:default_address] = address.id if _address[:default]
+							default_update[:default_address] = address.id if [true, 'true'].include?(_address[:default])
 						end
 
 						if !default_update[:default_address]
@@ -95,14 +95,14 @@ module Parbook
 				if params.contacts
 					Sequel::Model.db.transaction do
 						participant.contacts.delete
-						params[:contacts].each do |_contact|
 
+						params[:contacts].each do |_contact|
 							contact = ContactNumber.create({
 								contact_type: _contact.contact_type,
 								value: _contact.value,
 								participant_uuid: participant.uuid
 							})
-							default_update[:default_contact] = contact.id if _contact[:default]
+							default_update[:default_contact] = contact.id if [true, 'true'].include?(_contact[:default])
 						end
 
 						if !default_update[:default_contact]
@@ -120,7 +120,7 @@ module Parbook
 
 			delete "/:id/address/:address_id" do
 				participant = Participant.find(id: params[:id])
-				_address = participant.addresses.where(id: params[:address_id]).first
+				_address = participant.addresses.where({id: params[:address_id]}).first
 
 				reset_default = participant[:default_address] == _address.id
 
@@ -130,11 +130,13 @@ module Parbook
 					default_address = participant.addresses.count > 0 ? participant.addresses.first.id : nil
 					participant.update({default_address: default_address})
 				end
+
+				{id: params[:id]}
 			end
 
 			delete "/:id/contact/:contact_id" do
 				participant = Participant.find(id: params[:id])
-				_contact = participant.contacts.where(id: params[:contact_id]).first
+				_contact = participant.contacts.where({id: params[:contact_id]}).first
 
 				reset_default = participant[:default_contact] == _contact.id
 
@@ -144,6 +146,8 @@ module Parbook
 					default_contact = participant.contacts.count > 0 ? participant.contacts.first.id : nil
 					participant.update({default_contact: default_contact})
 				end
+
+				{id: params[:id]}
 			end
 
 			delete "/:id" do

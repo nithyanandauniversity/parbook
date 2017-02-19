@@ -8,6 +8,12 @@ class Participant < Sequel::Model
 	MKT_MAHANT    = 4
 	MKT_SRIMAHANT = 5
 
+	# Participant Attribute Order
+	# role
+	# ia_graduate
+	# ia_dates
+	# is_healer
+
 	def addresses
 		Address.where(participant_uuid: uuid)
 	end
@@ -38,37 +44,62 @@ class Participant < Sequel::Model
 
 
 	def self.search(params)
+		# puts params.inspect
 		size       = params && params[:limit].to_i || 10
 		page       = params && params[:page].to_i || 1
 		keyword    = params && params[:keyword] || nil
 		attributes = params && params[:attributes] || nil
 
+		# puts "PAGE: #{page} || SIZE: #{size}\n\n"
+
 		if keyword || attributes
 			# SEARCH
 			if keyword
 				if attributes
-					Participant.where(
+					participants = Participant.where(
 						(Sequel.like(:first_name, "%#{keyword}%")) |
 						(Sequel.like(:last_name, "%#{keyword}%")) |
+						(Sequel.like(:other_names, "%#{keyword}%")) |
 						(Sequel.like(:email, "%#{keyword}%")) &
 						(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
 					).paginate(page, size)
 				else
-					Participant.where(
+					participants = Participant.where(
 						(Sequel.like(:first_name, "%#{keyword}%")) |
 						(Sequel.like(:last_name, "%#{keyword}%")) |
+						(Sequel.like(:other_names, "%#{keyword}%")) |
 						(Sequel.like(:email, "%#{keyword}%"))
 					).paginate(page, size)
+					# participants = Participant.where("first_name COLLATE UTF8_GENERAL_CI LIKE ? " +
+					# 	"OR last_name COLLATE UTF8_GENERAL_CI LIKE ? " +
+					# 	"OR other_names COLLATE UTF8_GENERAL_CI LIKE ? " +
+					# 	"OR email COLLATE UTF8_GENERAL_CI LIKE ?",
+					# 	"'%#{keyword}%'", "'%#{keyword}%'",
+					# 	"'%#{keyword}%'", "'%#{keyword}%'"
+					# 	).paginate(page, size)
 				end
 			else
-				Participant.where(
+				participants = Participant.where(
 					(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
 				).paginate(page, size)
 			end
 		else
 			# ALL
-			Participant.dataset.paginate(page, size)
+			participants = Participant.dataset.paginate(page, size)
 		end
+
+		[{
+			participants: participants,
+			page_count: participants.page_count,
+			page_size: participants.page_size,
+			page_range: participants.page_range,
+			current_page: participants.current_page,
+			pagination_record_count: participants.pagination_record_count,
+			current_page_record_count: participants.current_page_record_count,
+			current_page_record_range: participants.current_page_record_range,
+			first_page: participants.first_page?,
+			last_page: participants.last_page?
+		}]
 	end
 
 end
