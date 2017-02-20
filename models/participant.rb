@@ -89,7 +89,7 @@ class Participant < Sequel::Model
 		end
 
 		[{
-			participants: participants,
+			participants: JSON.parse(participants.to_json(:include => :contact)),
 			page_count: participants.page_count,
 			page_size: participants.page_size,
 			page_range: participants.page_range,
