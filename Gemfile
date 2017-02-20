@@ -20,6 +20,10 @@ gem 'rake'
 gem 'mysql2'
 gem 'sequel'
 
+group :development do
+  gem "capistrano", "~> 3.7"
+end
+
 # Test requirements
 gem 'rspec', :group => 'test'
 gem 'rack-test', :require => 'rack/test', :group => 'test'
