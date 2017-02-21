@@ -61,7 +61,7 @@ describe "Participant" do
       get "/api/v1/participant", search: {
          page: 1,
          limit: 10,
-         keyword: 'senthuran'
+         keyword: 'Senthuran'
       }
 
       response = JSON.parse(last_response.body)[0]['participants']
@@ -254,7 +254,76 @@ describe "Participant" do
       expect(Participant.find(id: _participant.id)).to eql nil
       expect(Address.where(participant_uuid: _participant.uuid).count).to eql 0
       expect(ContactNumber.where(participant_uuid: _participant.uuid).count).to eql 0
+   end
 
+   it "should be able to add comment for participant" do
+      post '/api/v1/participant',
+         participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
+         addresses: [
+            {street: "some road", city: "City", country: "SG"},
+            {street: "another one", city: "SG", country: "SG"}
+         ],
+         contacts: [
+            {contact_type: "Home", value: "3342453"},
+            {contact_type: "Mobile", value: "454625363", default: true}
+         ]
+
+      resp = JSON.parse(last_response.body)
+      _participant = Participant.find(id: resp["id"])
+
+      post "/api/v1/participant/#{_participant.id}/comments", {
+         comment: {
+            content: "test comment",
+            created_by: "sgsaravana@gmail.com"
+         }
+      }
+
+      expect(_participant.comments.count).to eql 1
+   end
+
+   it "should be able to delete comment" do
+      post '/api/v1/participant',
+         participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
+         addresses: [
+            {street: "some road", city: "City", country: "SG"},
+            {street: "another one", city: "SG", country: "SG"}
+         ],
+         contacts: [
+            {contact_type: "Home", value: "3342453"},
+            {contact_type: "Mobile", value: "454625363", default: true}
+         ]
+
+      resp = JSON.parse(last_response.body)
+      _participant = Participant.find(id: resp["id"])
+
+      post "/api/v1/participant/#{_participant.id}/comments", {
+         comment: {
+            content: "first comment",
+            created_by: "sgsaravana@gmail.com"
+         }
+      }
+
+      post "/api/v1/participant/#{_participant.id}/comments", {
+         comment: {
+            content: "second comment",
+            created_by: "sgsaravana@gmail.com"
+         }
+      }
+
+      post "/api/v1/participant/#{_participant.id}/comments", {
+         comment: {
+            content: "third comment",
+            created_by: "sgsaravana@gmail.com"
+         }
+      }
+
+      expect(_participant.comments.count).to eql 3
+
+      comment_id = _participant.comments.last.id
+
+      delete "/api/v1/participant/#{_participant.id}/comments/#{comment_id}"
+
+      expect(_participant.comments.count).to eql 2
    end
 
 end

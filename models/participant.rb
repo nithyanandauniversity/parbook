@@ -42,6 +42,10 @@ class Participant < Sequel::Model
 		res.first
 	end
 
+	def comments
+		Comment.where(participant_uuid: uuid)
+	end
+
 
 	def self.search(params)
 		# puts params.inspect
