@@ -11,6 +11,7 @@ module Parbook
 				participant             = Participant.find({id: params[:id]})
 				participant[:contacts]  = participant.contacts
 				participant[:addresses] = participant.addresses
+				participant[:comments]  = participant.comments
 
 				participant
 			end

@@ -28,10 +28,12 @@ namespace :migrations do
 					email       = r[3]
 					member_id   = r[4]
 					other_names = r[5]
+					notes       = r[13]
 
 					if rcount > 1
 						contacts    = JSON.parse(r[7])
 						addresses   = JSON.parse(r[8])
+						comments    = JSON.parse(r[15])
 
 						attributes = {
 							role: smkts.find_index(r[12]),
@@ -48,12 +50,9 @@ namespace :migrations do
 							other_names: other_names,
 							member_id: member_id.gsub('SG-',''),
 							uuid: SecureRandom.uuid,
+							notes: notes,
 							participant_attributes: attributes.to_json,
 						}
-
-						# puts participant.inspect
-						# puts contacts.inspect
-						# puts addresses.inspect
 
 						Sequel::Model.db.transaction do
 							participant = Participant.create(data)
@@ -97,6 +96,18 @@ namespace :migrations do
 
 							if default_update[:default_address] || default_update[:default_contact]
 								participant.update(default_update)
+							end
+
+							if comments.length
+								comments.each do |comment|
+									Comment.create({
+										participant_uuid: participant.uuid,
+										created_by: comment['added_by'],
+										content: comment['content'],
+										event_uuid: comment['event_uuid'] || nil,
+										created_at: comment['timestamp']
+									})
+								end
 							end
 
 							puts participant.inspect
