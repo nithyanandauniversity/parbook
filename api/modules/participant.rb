@@ -34,7 +34,7 @@ module Parbook
 							country: _address.country,
 							participant_uuid: participant.uuid
 						})
-						default_update[:default_address] = address.id if [true, 'true'].include?(_address[:default])
+						default_update[:default_address] = address.id if [true, 'true'].include?(_address[:is_default])
 					end
 
 					if !default_update[:default_address]
@@ -50,7 +50,7 @@ module Parbook
 							value: _contact.value,
 							participant_uuid: participant.uuid
 						})
-						default_update[:default_contact] = contact.id if [true, 'true'].include?(_contact[:default])
+						default_update[:default_contact] = contact.id if [true, 'true'].include?(_contact[:is_default])
 					end
 
 					if !default_update[:default_contact]
@@ -97,7 +97,7 @@ module Parbook
 								country: _address.country,
 								participant_uuid: participant.uuid
 							})
-							default_update[:default_address] = address.id if [true, 'true'].include?(_address[:default])
+							default_update[:default_address] = address.id if [true, 'true'].include?(_address[:is_default])
 						end
 
 						if !default_update[:default_address]
@@ -116,7 +116,7 @@ module Parbook
 								value: _contact.value,
 								participant_uuid: participant.uuid
 							})
-							default_update[:default_contact] = contact.id if [true, 'true'].include?(_contact[:default])
+							default_update[:default_contact] = contact.id if [true, 'true'].include?(_contact[:is_default])
 						end
 
 						if !default_update[:default_contact]
@@ -177,6 +177,7 @@ module Parbook
 					participant.addresses.destroy
 					participant.contacts.destroy
 					participant.destroy
+					{id: participant.id}
 				else
 					count = 0
 					Participant.each do |participant|
@@ -185,7 +186,7 @@ module Parbook
 						count += 1 if participant.destroy
 					end
 
-					count
+					{delete_count: count}
 				end
 			end
 
