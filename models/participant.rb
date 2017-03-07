@@ -96,7 +96,7 @@ class Participant < Sequel::Model
 			end
 		else
 			# ALL
-			participants = participants.dataset.paginate(page, size)
+			participants = participants.paginate(page, size)
 		end
 
 		[{
