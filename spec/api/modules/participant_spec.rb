@@ -41,7 +41,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)
@@ -55,13 +55,15 @@ describe "Participant" do
    it "should be able to search participant by name or email" do
       Participant.all.each { |p| p.destroy }
 
-      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male")
-      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male")
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017")
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1017")
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1018")
 
       get "/api/v1/participant", search: {
          page: 1,
          limit: 10,
-         keyword: 'Senthuran'
+         keyword: 'Senthuran',
+         center_code: "1017"
       }
 
       response = JSON.parse(last_response.body)[0]['participants']
@@ -125,7 +127,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)
@@ -155,7 +157,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)
@@ -169,10 +171,10 @@ describe "Participant" do
          participant: {first_name: "Saravana"},
          addresses: [
             {street: "some road", city: "City", country: "SG"},
-            {street: "another one", city: "SG", country: "SG", default: true}
+            {street: "another one", city: "SG", country: "SG", is_default: true}
          ],
          contacts: [
-            {contact_type: "Home", value: "3342453", default: true},
+            {contact_type: "Home", value: "3342453", is_default: true},
             {contact_type: "Mobile", value: "454625363"}
          ]
 
@@ -195,7 +197,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)
@@ -236,7 +238,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)
@@ -265,7 +267,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)
@@ -290,7 +292,7 @@ describe "Participant" do
          ],
          contacts: [
             {contact_type: "Home", value: "3342453"},
-            {contact_type: "Mobile", value: "454625363", default: true}
+            {contact_type: "Mobile", value: "454625363", is_default: true}
          ]
 
       resp = JSON.parse(last_response.body)

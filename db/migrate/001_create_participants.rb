@@ -12,6 +12,7 @@ Sequel.migration do
       String :uuid
       Integer :default_contact
       Integer :default_address
+      String :center_code
       Text :notes, :collate => "UTF8_GENERAL_CI"
       Text :participant_attributes
       DateTime :created_at

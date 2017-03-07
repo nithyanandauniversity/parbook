@@ -6,4 +6,5 @@ vendor/gems/*
 .sass-cache/*
 db/*.db
 .*.sw*
+*.pid
 passenger.*.pid*

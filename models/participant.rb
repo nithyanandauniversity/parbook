@@ -49,18 +49,25 @@ class Participant < Sequel::Model
 
 	def self.search(params)
 		# puts params.inspect
-		size       = params && params[:limit].to_i || 10
-		page       = params && params[:page].to_i || 1
-		keyword    = params && params[:keyword] || nil
-		attributes = params && params[:attributes] || nil
+		size        = params && params[:limit].to_i || 10
+		page        = params && params[:page].to_i || 1
+		keyword     = params && params[:keyword] || nil
+		attributes  = params && params[:attributes] || nil
+		center_code = params && params[:center_code] || nil
 
 		# puts "PAGE: #{page} || SIZE: #{size}\n\n"
+
+		if center_code
+			participants = Participant.where(center_code: center_code)
+		else
+			participants = Participant.order(:id)
+		end
 
 		if keyword || attributes
 			# SEARCH
 			if keyword
 				if attributes
-					participants = Participant.where(
+					participants = participants.where(
 						(Sequel.like(:first_name, "%#{keyword}%")) |
 						(Sequel.like(:last_name, "%#{keyword}%")) |
 						(Sequel.like(:other_names, "%#{keyword}%")) |
@@ -68,7 +75,7 @@ class Participant < Sequel::Model
 						(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
 					).paginate(page, size)
 				else
-					participants = Participant.where(
+					participants = participants.where(
 						(Sequel.like(:first_name, "%#{keyword}%")) |
 						(Sequel.like(:last_name, "%#{keyword}%")) |
 						(Sequel.like(:other_names, "%#{keyword}%")) |
@@ -83,13 +90,13 @@ class Participant < Sequel::Model
 					# 	).paginate(page, size)
 				end
 			else
-				participants = Participant.where(
+				participants = participants.where(
 					(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
 				).paginate(page, size)
 			end
 		else
 			# ALL
-			participants = Participant.dataset.paginate(page, size)
+			participants = participants.dataset.paginate(page, size)
 		end
 
 		[{
