@@ -8,12 +8,15 @@ module Parbook
 			end
 
 			get '/:id' do
-				participant             = Participant.find({id: params[:id]})
-				participant[:contacts]  = participant.contacts
-				participant[:addresses] = participant.addresses
-				participant[:comments]  = participant.comments
+				participant = Participant.find({member_id: params[:id]})
 
-				participant
+				if participant
+					participant[:contacts]  = participant.contacts
+					participant[:addresses] = participant.addresses
+					participant[:comments]  = participant.comments
+				end
+
+				participant || {}
 			end
 
 			post do
