@@ -73,6 +73,27 @@ describe "Participant" do
       expect(response[0]['first_name']).to eql "Senthuran"
    end
 
+   it "should be able to search by name or email case - insensitively" do
+      Participant.all.each { |p| p.destroy }
+
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017")
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1017")
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1018")
+
+      get "/api/v1/participant", search: {
+         page: 1,
+         limit: 10,
+         keyword: 'senthuran',
+         center_code: "1017"
+      }
+
+      response = JSON.parse(last_response.body)[0]['participants']
+
+      expect(response.length).to eql 1
+      expect(response[0]['email']).to eql "psenthu@gmail.com"
+      expect(response[0]['first_name']).to eql "Senthuran"
+   end
+
    it "should be able to search participants by participant_attributes" do
       Participant.all.each { |p| p.destroy }
 
@@ -115,6 +136,45 @@ describe "Participant" do
       # puts attributes[:ia_graduate]
       expect(attributes[:ia_graduate]).to eql true
       expect(attributes[:healer]).to eql true
+   end
+
+   it "should be able to search participant by contact number or city or country" do
+      Participant.all.each { |p| p.destroy }
+
+      post '/api/v1/participant',
+         participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
+         addresses: [
+            {street: "some road", city: "City", country: "SG"},
+            {street: "another one", city: "SG", country: "SG"}
+         ],
+         contacts: [
+            {contact_type: "Home", value: "3342453"},
+            {contact_type: "Mobile", value: "454625363", is_default: true}
+         ]
+
+      post '/api/v1/participant',
+         participant: {first_name:"Senthuran", email: "psenthu@gmail.com", uuid: SecureRandom.uuid},
+         addresses: [
+            {street: "some road", city: "Singapore", country: "SG"},
+            {street: "another one", city: "Colombo", country: "Sri Lanka"}
+         ],
+         contacts: [
+            {contact_type: "Home", value: "77788866"},
+            {contact_type: "Mobile", value: "2234445", is_default: true}
+         ]
+
+      expect(Participant.count).to eql 2
+
+      get "/api/v1/participant", search: {
+         page: 1,
+         limit: 10,
+         keyword: '33424'
+      }
+
+      response = JSON.parse(last_response.body)[0]['participants']
+
+      expect(response.length).to eql 1
+      expect(response[0]['first_name']).to eql "Saravana"
    end
 
    it "should be able to edit participant" do

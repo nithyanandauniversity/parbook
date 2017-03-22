@@ -14,6 +14,10 @@ class Participant < Sequel::Model
 	# ia_dates
 	# is_healer
 
+	def self.participant_attr
+		[:first_name, :last_name, :other_names, :email, :gender, :dob, :member_id, :uuid, :default_contact, :default_address, :center_code, :notes, :participant_attributes, :created_at, :updated_at]
+	end
+
 	def addresses
 		Address.where(participant_uuid: uuid)
 	end
@@ -60,39 +64,52 @@ class Participant < Sequel::Model
 		if center_code
 			participants = Participant.where(center_code: center_code)
 		else
-			participants = Participant.order(:id)
+			participants = Participant.order('participants.id')
 		end
 
 		if keyword || attributes
 			# SEARCH
 			if keyword
 				if attributes
-					participants = participants.where(
-						(Sequel.like(:first_name, "%#{keyword}%")) |
-						(Sequel.like(:last_name, "%#{keyword}%")) |
-						(Sequel.like(:other_names, "%#{keyword}%")) |
-						(Sequel.like(:email, "%#{keyword}%")) &
-						(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
-					).paginate(page, size)
+
+					participants = participants.grep(
+							[:first_name, :last_name, :other_names, :email, :participant_attributes],
+							"%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{attributes.join('%')}%",
+							:case_insensitive => true
+						)
+						.join_table(:left, :contact_numbers, :participant_uuid => :uuid)
+						.or("contact_numbers.value LIKE ?", "%#{keyword}%")
+						.paginate(page, size)
+
+					# participants = participants.where(
+					# 	(Sequel.like(:first_name, "%#{keyword}%")) |
+					# 	(Sequel.like(:last_name, "%#{keyword}%")) |
+					# 	(Sequel.like(:other_names, "%#{keyword}%")) |
+					# 	(Sequel.like(:email, "%#{keyword}%")) &
+					# 	(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
+					# ).paginate(page, size)
 				else
-					participants = participants.where(
-						(Sequel.like(:first_name, "%#{keyword}%")) |
-						(Sequel.like(:last_name, "%#{keyword}%")) |
-						(Sequel.like(:other_names, "%#{keyword}%")) |
-						(Sequel.like(:email, "%#{keyword}%"))
-					).paginate(page, size)
-					# participants = Participant.where("first_name COLLATE UTF8_GENERAL_CI LIKE ? " +
-					# 	"OR last_name COLLATE UTF8_GENERAL_CI LIKE ? " +
-					# 	"OR other_names COLLATE UTF8_GENERAL_CI LIKE ? " +
-					# 	"OR email COLLATE UTF8_GENERAL_CI LIKE ?",
-					# 	"'%#{keyword}%'", "'%#{keyword}%'",
-					# 	"'%#{keyword}%'", "'%#{keyword}%'"
-					# 	).paginate(page, size)
+
+					participants = participants.grep(
+							[:first_name, :last_name, :other_names, :email], "%#{keyword}%", :case_insensitive => true
+						)
+						.join_table(:left, :contact_numbers, :participant_uuid => :uuid)
+						.or("contact_numbers.value LIKE ?", "%#{keyword}%")
+						.paginate(page, size)
+
+					# participants = participants.where(
+					# 	(Sequel.like(:first_name, "%#{keyword}%")) |
+					# 	(Sequel.like(:last_name, "%#{keyword}%")) |
+					# 	(Sequel.like(:other_names, "%#{keyword}%")) |
+					# 	(Sequel.like(:email, "%#{keyword}%"))
+					# ).paginate(page, size)
 				end
 			else
+
 				participants = participants.where(
 					(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
 				).paginate(page, size)
+
 			end
 		else
 			# ALL
@@ -100,7 +117,7 @@ class Participant < Sequel::Model
 		end
 
 		[{
-			participants: JSON.parse(participants.to_json(:include => :contact)),
+			participants: JSON.parse(participants.to_json(:include => :contact, :only => self.participant_attr)),
 			page_count: participants.page_count,
 			page_size: participants.page_size,
 			page_range: participants.page_range,
