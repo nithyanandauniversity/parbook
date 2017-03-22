@@ -84,7 +84,7 @@ class Participant < Sequel::Model
 						(Sequel.ilike(:first_name, "%#{keyword}%")) |
 						(Sequel.ilike(:last_name, "%#{keyword}%")) |
 						(Sequel.ilike(:other_names, "%#{keyword}%")) |
-						(Sequel.ilike(:email, "%#{keyword}%")) ||
+						(Sequel.ilike(:email, "%#{keyword}%")) |
 						(Sequel.ilike(:participant_attributes, "%#{attributes.join('%')}%"))
 					)
 					.or("uuid IN ?", contact_uuids)
