@@ -59,6 +59,7 @@ class Participant < Sequel::Model
 		attributes  = params && params[:attributes] || nil
 		center_code = params && params[:center_code] || nil
 
+		# puts "KEYWORD #{keyword} || ATTRIBUTES #{attributes}\n"
 		# puts "PAGE: #{page} || SIZE: #{size}\n\n"
 
 		if center_code
@@ -67,42 +68,37 @@ class Participant < Sequel::Model
 			participants = Participant.order('participants.id')
 		end
 
-		if keyword || attributes
+		if (keyword && !keyword.blank?) || (attributes && !attributes.blank?)
 			# SEARCH
-			if keyword
-				if attributes
+			if !keyword.blank?
+
+				contact_uuids = ContactNumber.where(
+					(Sequel.like(:value, "%#{keyword}%"))
+				).map { |contact|
+					contact.participant_uuid if contact.participant
+				}.compact
+
+				if attributes && !attributes.blank?
 
 					participants = participants.grep(
-							[:first_name, :last_name, :other_names, :email, :participant_attributes],
-							"%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{attributes.join('%')}%",
-							:case_insensitive => true
-						)
-						.join_table(:left, :contact_numbers, :participant_uuid => :uuid)
-						.or("contact_numbers.value LIKE ?", "%#{keyword}%")
-						.paginate(page, size)
+						[:first_name, :last_name, :other_names, :email, :participant_attributes],
+						"%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{attributes.join('%')}%",
+						:case_insensitive => true
+					)
+					.or("uuid IN ?", contact_uuids)
+					.paginate(page, size)
 
-					# participants = participants.where(
-					# 	(Sequel.like(:first_name, "%#{keyword}%")) |
-					# 	(Sequel.like(:last_name, "%#{keyword}%")) |
-					# 	(Sequel.like(:other_names, "%#{keyword}%")) |
-					# 	(Sequel.like(:email, "%#{keyword}%")) &
-					# 	(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
-					# ).paginate(page, size)
 				else
 
-					participants = participants.grep(
-							[:first_name, :last_name, :other_names, :email], "%#{keyword}%", :case_insensitive => true
-						)
-						.join_table(:left, :contact_numbers, :participant_uuid => :uuid)
-						.or("contact_numbers.value LIKE ?", "%#{keyword}%")
-						.paginate(page, size)
+					participants = participants.where(
+						(Sequel.ilike(:first_name, "%#{keyword}%")) |
+						(Sequel.ilike(:last_name, "%#{keyword}%")) |
+						(Sequel.ilike(:other_names, "%#{keyword}%")) |
+						(Sequel.ilike(:email, "%#{keyword}%"))
+					)
+					.or("uuid IN ?", contact_uuids)
+					.paginate(page, size)
 
-					# participants = participants.where(
-					# 	(Sequel.like(:first_name, "%#{keyword}%")) |
-					# 	(Sequel.like(:last_name, "%#{keyword}%")) |
-					# 	(Sequel.like(:other_names, "%#{keyword}%")) |
-					# 	(Sequel.like(:email, "%#{keyword}%"))
-					# ).paginate(page, size)
 				end
 			else
 
@@ -117,7 +113,7 @@ class Participant < Sequel::Model
 		end
 
 		[{
-			participants: JSON.parse(participants.to_json(:include => :contact, :only => self.participant_attr)),
+			participants: JSON.parse(participants.to_json(:include => :contact)),
 			page_count: participants.page_count,
 			page_size: participants.page_size,
 			page_range: participants.page_range,
