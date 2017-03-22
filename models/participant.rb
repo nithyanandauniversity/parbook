@@ -80,10 +80,12 @@ class Participant < Sequel::Model
 
 				if attributes && !attributes.blank?
 
-					participants = participants.grep(
-						[:first_name, :last_name, :other_names, :email, :participant_attributes],
-						"%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{keyword}%" "%#{attributes.join('%')}%",
-						:case_insensitive => true
+					participants = participants.where(
+						(Sequel.ilike(:first_name, "%#{keyword}%")) |
+						(Sequel.ilike(:last_name, "%#{keyword}%")) |
+						(Sequel.ilike(:other_names, "%#{keyword}%")) |
+						(Sequel.ilike(:email, "%#{keyword}%")) ||
+						(Sequel.ilike(:participant_attributes, "%#{attributes.join('%')}%"))
 					)
 					.or("uuid IN ?", contact_uuids)
 					.paginate(page, size)
@@ -103,7 +105,7 @@ class Participant < Sequel::Model
 			else
 
 				participants = participants.where(
-					(Sequel.like(:participant_attributes, "%#{attributes.join('%')}%"))
+					(Sequel.ilike(:participant_attributes, "%#{attributes.join('%')}%"))
 				).paginate(page, size)
 
 			end
