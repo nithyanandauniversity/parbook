@@ -78,7 +78,7 @@ module Parbook
 			end
 
 			post '/:id/comments' do
-				participant = Participant.find(id: params[:id])
+				participant = Participant.find(member_id: params[:id])
 
 				comment = Comment.create({
 					participant_uuid: participant.uuid,
@@ -91,7 +91,7 @@ module Parbook
 			end
 
 			put "/:id" do
-				participant = Participant.find(id: params[:id])
+				participant = Participant.find(member_id: params[:id])
 				participant.update(params.participant)
 
 				default_update = {}
@@ -145,7 +145,7 @@ module Parbook
 			end
 
 			delete "/:id/address/:address_id" do
-				participant = Participant.find(id: params[:id])
+				participant = Participant.find(member_id: params[:id])
 				_address = participant.addresses.where({id: params[:address_id]}).first
 
 				reset_default = participant[:default_address] == _address.id
@@ -161,7 +161,7 @@ module Parbook
 			end
 
 			delete "/:id/contact/:contact_id" do
-				participant = Participant.find(id: params[:id])
+				participant = Participant.find(member_id: params[:id])
 				_contact = participant.contacts.where({id: params[:contact_id]}).first
 
 				reset_default = participant[:default_contact] == _contact.id
@@ -177,7 +177,7 @@ module Parbook
 			end
 
 			delete "/:id/comments/:comment_id" do
-				participant = Participant.find(id: params[:id])
+				participant = Participant.find(member_id: params[:id])
 
 				comment = participant.comments.where(id: params[:comment_id])
 				comment.destroy
@@ -185,7 +185,7 @@ module Parbook
 
 			delete "/:id" do
 				unless params[:id] == "delete_all"
-					participant = Participant.find(id: params[:id])
+					participant = Participant.find(member_id: params[:id])
 					participant.addresses.destroy
 					participant.contacts.destroy
 					participant.destroy
