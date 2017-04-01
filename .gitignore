@@ -7,4 +7,5 @@ vendor/gems/*
 db/*.db
 .*.sw*
 *.pid
+*.csv
 passenger.*.pid*

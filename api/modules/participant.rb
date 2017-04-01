@@ -68,6 +68,15 @@ module Parbook
 				participant
 			end
 
+			post '/import_file' do
+				file = DataImport::Participants.import(params.creator, params.upload.tempfile, params.centers)
+				content_type "application/octet-stream"
+				header['Content-Disposition'] = "attachment; filename=errors_list.csv"
+				# env['api.format'] = :binary
+				body file
+				# return {status: 200, message: "Success"}
+			end
+
 			post '/:id/comments' do
 				participant = Participant.find(id: params[:id])
 

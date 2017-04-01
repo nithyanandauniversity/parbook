@@ -1,12 +1,12 @@
 class Participant < Sequel::Model
 	self.plugin :timestamps
 
-	MKT_NONE      = 0
-	MKT_VOLUNTEER = 1
-	MKT_THANEDAR  = 2
-	MKT_KOTARI    = 3
-	MKT_MAHANT    = 4
-	MKT_SRIMAHANT = 5
+	SMKT_NONE      = 0
+	SMKT_VOLUNTEER = 1
+	SMKT_THANEDAR  = 2
+	SMKT_KOTARI    = 3
+	SMKT_MAHANT    = 4
+	SMKT_SRIMAHANT = 5
 
 	# Participant Attribute Order
 	# role

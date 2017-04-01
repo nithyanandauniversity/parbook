@@ -52,6 +52,7 @@ namespace :migrations do
 							uuid: SecureRandom.uuid,
 							notes: notes,
 							participant_attributes: attributes.to_json,
+							center_code: "5e54e63bf341"
 						}
 
 						Sequel::Model.db.transaction do
@@ -121,6 +122,14 @@ namespace :migrations do
 		rescue Exception => e
 			puts e.inspect
 		end
+	end
+
+
+	desc "Import Participant test task"
+	task :import_file, [:creator, :file] => [:environment] do |t, args|
+		creator = args[:creator]
+		file    = args[:file]
+		DataImport::Participant.import(creator, file)
 	end
 
 end
