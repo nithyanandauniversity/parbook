@@ -147,6 +147,127 @@ module DataImport
 			end
 		end
 
+		def self.import_singapore(creator, file, centers)
+			puts "Module DataImport::Participant.import works !"
+			error_records  = []
+			countries_list = Participants.generate_countries_list()
+			dial_codes     = Participants.generate_dial_codes_list()
+
+			data = File.read("#{file.path}")
+
+			gender_list = {
+				'M' => "Male",
+				'F' => "Female"
+			}
+
+			contact_type_list = {
+				"M" => "Mobile",
+				"H" => "Home"
+			}
+
+			smkt_list = {
+				"S" => Participant::SMKT_SRIMAHANT,
+				"M" => Participant::SMKT_MAHANT,
+				"K" => Participant::SMKT_KOTARI,
+				"T" => Participant::SMKT_THANEDAR,
+				"V" => Participant::SMKT_VOLUNTEER,
+				"N" => Participant::SMKT_NONE
+			}
+
+			begin
+				Participant.all.each { |p| p.destroy }
+				ContactNumber.all.each { |c| c.destroy }
+				Address.all.each { |a| a.destroy }
+
+				rcount = 0
+				count  = 0
+				header = ''
+
+				data.split('\n').each do |_row|
+					CSV.parse(_row) do |row|
+						header = row if rcount == 0
+
+						if rcount > 0
+							participant = {
+								:number      => row[0],
+								:first_name  => row[1],
+								:last_name   => row[2],
+								:gender      => gender_list[row[3].to_s],
+								:email       => row[4],
+								:other_names => row[5],
+								:member_id   => row[6].gsub('SG-','')
+							}
+
+							participant[:contact_numbers] = [
+								{
+									:value        => row[7],
+									:contact_type => contact_type_list[row[8].to_s]
+								},
+								{
+									:value        => row[9],
+									:contact_type => contact_type_list[row[10].to_s]
+								}
+							]
+
+							participant[:participant_attributes] = {
+								role: smkt_list[row[14].to_s],
+								ia_graduate: row[11] == "Y",
+								ia_dates: row[12].to_s,
+								is_healer: row[13] == "Y"
+							}.to_json
+
+							participant[:address] = {
+								:street      => row[15],
+								:city        => row[16],
+								:state       => row[17],
+								:postal_code => row[18],
+								:country     => row[19]
+							}
+
+							participant[:created_by]  = creator
+							participant[:notes]       = row[20]
+							participant[:center_code] = row[21].to_s.split(' - ')[1]
+
+							participant[:enrichers] = JSON.parse(row[22])
+							participant[:commecnts] = JSON.parse(row[23])
+
+							data = {:participant => participant}
+
+							# VALIDATION LIST
+							# 1: Empty first name
+							data = Participants.validate_empty_name(data)
+							# 2: Empty Email and Contact
+							data = Participants.validate_email_contact(data)
+							# 3: Invalid Email Address
+							data = Participants.validate_email(data)
+							# 4: Empty City / Country
+							data = Participants.validate_city_country(data, countries_list)
+							# 5: Invalid contact number
+							data = Participants.validate_contact(data, dial_codes)
+							# 6: Empty Center Info / Invalid Center
+							data = Participants.validate_center(data, JSON.parse(centers))
+							# 7: Check Duplicate with first_name / last_name / Email / Contact
+							data = Participants.validate_duplicates(data)
+
+							if data[:error] == true
+								row.pop()
+								row.pop()
+								error_records << {row: row, data: data}
+							else
+								count += 1 if Participants.save_record_sg(data)
+							end
+						end
+						rcount += 1
+					end
+				end
+
+				puts "\n\n#{count} Records Saved / #{rcount} Total Rows"
+				return Participants.generate_error_report(error_records, header)
+
+			rescue Exception => e
+				puts e.inspect
+			end
+		end
 
 		def self.validate_empty_name(record)
 			data = record[:participant]
@@ -305,6 +426,71 @@ module DataImport
 			participant.update(member_id: member_id, default_address: default_address, default_contact: default_contact)
 
 			return true
+		end
+
+		def self.save_record_sg(data)
+			puts "SAVING SG #{data.inspect}\n\n"
+			participant = Participant.create(
+				first_name: data[:participant][:first_name],
+				last_name: data[:participant][:last_name],
+				email: data[:participant][:email],
+				gender: data[:participant][:gender],
+				other_names: data[:participant][:other_names],
+				uuid: SecureRandom.uuid,
+				member_id: data[:participant][:member_id],
+				center_code: data[:participant][:center_code],
+				notes: data[:participant][:notes],
+				created_by: data[:participant][:created_by],
+				participant_attributes: data[:participant][:participant_attributes]
+			)
+
+			default_contact = nil
+			default_address = nil
+
+			if !data[:empty_city_country]
+				address = Address.create(
+					street: data[:participant][:address][:street],
+					city: data[:participant][:address][:city],
+					state: data[:participant][:address][:state],
+					postal_code: data[:participant][:address][:postal_code],
+					country: data[:participant][:address][:country],
+					participant_uuid: participant.uuid
+				)
+				default_address = address.id
+			end
+
+			if !data[:empty_primary_phone] && !data[:invalid_primary_phone]
+				primary_contact = ContactNumber.create(
+					contact_type: data[:participant][:contact_numbers][0][:contact_type],
+					value: data[:participant][:contact_numbers][0][:value],
+					participant_uuid: participant.uuid
+				)
+				default_contact = primary_contact.id
+			end
+
+			if !data[:empty_secondary_phone] && !data[:invalid_secondary_phone]
+				ContactNumber.create(
+					contact_type: data[:participant][:contact_numbers][1][:contact_type],
+					value: data[:participant][:contact_numbers][1][:value],
+					participant_uuid: participant.uuid
+				)
+			end
+
+			participant.update(default_address: default_address, default_contact: default_contact)
+
+			data[:participant][:enrichers].each do |enricher|
+				ParticipantFriend.create(participant_id: participant.member_id, friend_id: enricher.gsub('SG-',''))
+			end
+
+			data[:participant][:commecnts].each do |comment|
+				Comment.create({
+					participant_uuid: participant.uuid,
+					created_by: comment['added_by'],
+					content: comment['content'],
+					event_uuid: comment['event_uuid'] || nil,
+					created_at: comment['timestamp']
+				})
+			end
 		end
 
 		def self.generate_error_report(errors, header)
