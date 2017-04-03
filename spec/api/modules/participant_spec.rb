@@ -15,6 +15,27 @@ describe "Participant" do
       expect(resp["first_name"]).to eql("Saravana")
    end
 
+   it "should be able to create participants with friends" do
+
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", member_id: "123123", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017", uuid: SecureRandom.uuid)
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", member_id: "112233", email: "psenthu@gmail.com", gender: "Male", center_code: "1017", uuid: SecureRandom.uuid)
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", member_id: "234123", email: "psenthu@gmail.com", gender: "Male", center_code: "1018", uuid: SecureRandom.uuid)
+
+      expect(user1.uuid).not_to eql nil
+      expect(user2.uuid).not_to eql nil
+
+      post '/api/v1/participant',
+         participant: {first_name: "Sri Nithya Shreshtha", last_name: "Ananda", email: "sri.nithya.shreshthananda@gmail.com"},
+         friends: [user1.member_id, user2.member_id]
+
+      response = JSON.parse(last_response.body)
+
+      participant = Participant.find(id: response['id'])
+
+      expect(ParticipantFriend.where(participant_id: participant.member_id).count).to eql 2
+      expect(participant.friends.length).to eql 2
+   end
+
    it "should be able to add address and contacts" do
 
       post '/api/v1/participant',
@@ -199,7 +220,7 @@ describe "Participant" do
       expect(_participant.contact.contact_type).to eql("Mobile")
       expect(_participant.contact.value).to eql("454625363")
 
-      put "/api/v1/participant/#{_participant.id}",
+      put "/api/v1/participant/#{_participant.member_id}",
          participant: {first_name: "Saravana1"}
 
       response = JSON.parse(last_response.body)
@@ -227,7 +248,7 @@ describe "Participant" do
       expect(_participant.contact.contact_type).to eql("Mobile")
       expect(_participant.contact.value).to eql("454625363")
 
-      put "/api/v1/participant/#{_participant.id}",
+      put "/api/v1/participant/#{_participant.member_id}",
          participant: {first_name: "Saravana"},
          addresses: [
             {street: "some road", city: "City", country: "SG"},
@@ -272,7 +293,7 @@ describe "Participant" do
 
       address = _participant.addresses.last
 
-      delete "/api/v1/participant/#{_participant.id}/address/#{address.id}"
+      delete "/api/v1/participant/#{_participant.member_id}/address/#{address.id}"
 
       participant = Participant.find(id: _participant.id)
 
@@ -282,7 +303,7 @@ describe "Participant" do
 
       contact_id = _participant.contacts.last.id
 
-      delete "/api/v1/participant/#{_participant.id}/contact/#{contact_id}"
+      delete "/api/v1/participant/#{_participant.member_id}/contact/#{contact_id}"
       participant = Participant.find(id: _participant.id)
 
       expect(participant.contacts.count).to eql 1
@@ -311,12 +332,14 @@ describe "Participant" do
       expect(_participant.contact.contact_type).to eql("Mobile")
       expect(_participant.contact.value).to eql("454625363")
 
-      delete "/api/v1/participant/#{_participant.id}"
+      delete "/api/v1/participant/#{_participant.member_id}"
 
       expect(Participant.find(id: _participant.id)).to eql nil
       expect(Address.where(participant_uuid: _participant.uuid).count).to eql 0
       expect(ContactNumber.where(participant_uuid: _participant.uuid).count).to eql 0
    end
+
+   # it "should be able to add multiple "
 
    it "should be able to add comment for participant" do
       post '/api/v1/participant',
@@ -333,7 +356,7 @@ describe "Participant" do
       resp = JSON.parse(last_response.body)
       _participant = Participant.find(id: resp["id"])
 
-      post "/api/v1/participant/#{_participant.id}/comments", {
+      post "/api/v1/participant/#{_participant.member_id}/comments", {
          comment: {
             content: "test comment",
             created_by: "sgsaravana@gmail.com"
@@ -358,21 +381,21 @@ describe "Participant" do
       resp = JSON.parse(last_response.body)
       _participant = Participant.find(id: resp["id"])
 
-      post "/api/v1/participant/#{_participant.id}/comments", {
+      post "/api/v1/participant/#{_participant.member_id}/comments", {
          comment: {
             content: "first comment",
             created_by: "sgsaravana@gmail.com"
          }
       }
 
-      post "/api/v1/participant/#{_participant.id}/comments", {
+      post "/api/v1/participant/#{_participant.member_id}/comments", {
          comment: {
             content: "second comment",
             created_by: "sgsaravana@gmail.com"
          }
       }
 
-      post "/api/v1/participant/#{_participant.id}/comments", {
+      post "/api/v1/participant/#{_participant.member_id}/comments", {
          comment: {
             content: "third comment",
             created_by: "sgsaravana@gmail.com"
@@ -383,7 +406,7 @@ describe "Participant" do
 
       comment_id = _participant.comments.last.id
 
-      delete "/api/v1/participant/#{_participant.id}/comments/#{comment_id}"
+      delete "/api/v1/participant/#{_participant.member_id}/comments/#{comment_id}"
 
       expect(_participant.comments.count).to eql 2
    end

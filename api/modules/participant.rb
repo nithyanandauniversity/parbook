@@ -65,6 +65,14 @@ module Parbook
 					participant.update(default_update)
 				end
 
+				if params[:friends]
+					params[:friends].each do |_friend|
+						if Participant.find(member_id: _friend)
+							ParticipantFriend.create(participant_id: participant.member_id, friend_id: _friend)
+						end
+					end
+				end
+
 				participant
 			end
 

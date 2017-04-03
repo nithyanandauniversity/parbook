@@ -50,6 +50,12 @@ class Participant < Sequel::Model
 		Comment.where(participant_uuid: uuid)
 	end
 
+	def friends
+		ParticipantFriend.where(participant_id: member_id).collect { |friend|
+			Participant.find(member_id: friend.friend_id)
+		}
+	end
+
 
 	def self.search(params)
 		# puts params.inspect
