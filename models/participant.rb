@@ -53,7 +53,7 @@ class Participant < Sequel::Model
 	def friends
 		ParticipantFriend.where(participant_id: member_id).collect { |friend|
 			Participant.find(member_id: friend.friend_id)
-		}
+		}.compact
 	end
 
 

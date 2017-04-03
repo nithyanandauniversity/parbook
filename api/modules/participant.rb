@@ -14,6 +14,7 @@ module Parbook
 					participant[:contacts]  = participant.contacts
 					participant[:addresses] = participant.addresses
 					participant[:comments]  = participant.comments
+					participant[:friends]   = participant.friends
 				end
 
 				participant || {}
@@ -155,6 +156,18 @@ module Parbook
 
 				if default_update[:default_address] || default_update[:default_contact]
 					participant.update(default_update)
+				end
+
+				ParticipantFriend.where(participant_id: participant.member_id).delete
+
+				if !params.friends.nil?
+					Sequel::Model.db.transaction do
+						params[:friends].each do |_friend|
+							if Participant.find(member_id: _friend)
+								ParticipantFriend.create(participant_id: participant.member_id, friend_id: _friend)
+							end
+						end
+					end
 				end
 
 				participant

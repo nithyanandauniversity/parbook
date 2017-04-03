@@ -289,7 +289,8 @@ module DataImport
 
 		def self.validate_email(record)
 			data = record[:participant]
-			emailRegex = /^[a-z0-9](\.?[a-z0-9_-]){0,}@[a-z0-9-]+\.([a-z]{1,6}\.)?[a-z]{2,6}$/i
+			# emailRegex = /[a-z0-9](\.?[a-z0-9_-]){0,}@[a-z0-9-]+\.([a-z]{1,6}\.)?[a-z]{2,6}$/i
+			emailRegex = /[a-z0-9](\.?[a-z0-9_-]){0,}@[a-z0-9-\.]+/i
 
 			record[:invalid_email] = data[:email] && data[:email].to_s.length > 0 && (data[:email] =~ emailRegex).nil?
 			record[:error] = true if record[:invalid_email]
@@ -429,7 +430,7 @@ module DataImport
 		end
 
 		def self.save_record_sg(data)
-			puts "SAVING SG #{data.inspect}\n\n"
+			# puts "SAVING SG #{data.inspect}\n\n"
 			participant = Participant.create(
 				first_name: data[:participant][:first_name],
 				last_name: data[:participant][:last_name],
