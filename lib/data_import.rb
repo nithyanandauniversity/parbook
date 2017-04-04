@@ -189,13 +189,14 @@ module DataImport
 
 						if rcount > 0
 							participant = {
-								:number      => row[0],
-								:first_name  => row[1],
-								:last_name   => row[2],
-								:gender      => gender_list[row[3].to_s],
-								:email       => row[4],
-								:other_names => row[5],
-								:member_id   => row[6].gsub('SG-','')
+								:number         => row[0],
+								:first_name     => row[1],
+								:last_name      => row[2],
+								:gender         => gender_list[row[3].to_s],
+								:email          => row[4],
+								:other_names    => row[5],
+								:member_id      => row[6].gsub('SG-','').strip,
+								:default_friend => row[23] ? row[23].gsub('SG-','').strip : nil
 							}
 
 							participant[:contact_numbers] = [
@@ -229,7 +230,8 @@ module DataImport
 							participant[:center_code] = row[21].to_s.split(' - ')[1]
 
 							participant[:enrichers] = JSON.parse(row[22])
-							participant[:commecnts] = JSON.parse(row[23])
+							# participant[:default_friend] = row[23]
+							participant[:commecnts] = JSON.parse(row[24])
 
 							data = {:participant => participant}
 
@@ -442,6 +444,7 @@ module DataImport
 				center_code: data[:participant][:center_code],
 				notes: data[:participant][:notes],
 				created_by: data[:participant][:created_by],
+				default_friend: data[:participant][:default_friend],
 				participant_attributes: data[:participant][:participant_attributes]
 			)
 
@@ -480,7 +483,7 @@ module DataImport
 			participant.update(default_address: default_address, default_contact: default_contact)
 
 			data[:participant][:enrichers].each do |enricher|
-				ParticipantFriend.create(participant_id: participant.member_id, friend_id: enricher.gsub('SG-',''))
+				ParticipantFriend.create(participant_id: participant.member_id, friend_id: enricher.gsub('SG-','').strip)
 			end
 
 			data[:participant][:commecnts].each do |comment|

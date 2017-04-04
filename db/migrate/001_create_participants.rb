@@ -14,6 +14,7 @@ Sequel.migration do
       Integer :default_address
       String :center_code
       String :created_by
+      String :default_friend
       Text :notes, :collate => "UTF8_GENERAL_CI"
       Text :participant_attributes
       DateTime :created_at

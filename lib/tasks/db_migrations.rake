@@ -31,9 +31,10 @@ namespace :migrations do
 					notes       = r[13]
 
 					if rcount > 1
-						contacts    = JSON.parse(r[7])
-						addresses   = JSON.parse(r[8])
-						comments    = JSON.parse(r[15])
+						contacts  = JSON.parse(r[7])
+						addresses = JSON.parse(r[8])
+						comments  = JSON.parse(r[15])
+						enrichers = JSON.parse(r[14])
 
 						attributes = {
 							role: smkts.find_index(r[12]),
@@ -107,6 +108,15 @@ namespace :migrations do
 										content: comment['content'],
 										event_uuid: comment['event_uuid'] || nil,
 										created_at: comment['timestamp']
+									})
+								end
+							end
+
+							if enrichers.length
+								enrichers.each do |enricher|
+									ParticipantFriend.create({
+										participant_id: participant.member_id,
+										friend_id: enricher
 									})
 								end
 							end
