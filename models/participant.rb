@@ -58,21 +58,30 @@ class Participant < Sequel::Model
 
 
 	def self.search(params)
-		# puts params.inspect
+
 		size        = params && params[:limit].to_i || 10
 		page        = params && params[:page].to_i || 1
 		keyword     = params && params[:keyword] || nil
 		attributes  = params && params[:attributes] || nil
 		center_code = params && params[:center_code] || nil
+		ext_search  = params && params[:ext_search] || nil
 
 		# puts "KEYWORD #{keyword} || ATTRIBUTES #{attributes}\n"
 		# puts "PAGE: #{page} || SIZE: #{size}\n\n"
+		# puts "EXT_SEARCH :: #{ext_search.inspect}"
 
-		if center_code
-			participants = Participant.where(center_code: center_code)
+		if ext_search
+			if params[:center_codes]
+				participants = Participant.where("center_code IN ?", params[:center_codes])
+			end
 		else
-			participants = Participant.order('participants.id')
+			if center_code
+				participants = Participant.where(center_code: center_code)
+			else
+				participants = Participant.order('participants.id')
+			end
 		end
+
 
 		if (keyword && !keyword.blank?) || (attributes && !attributes.blank?)
 			# SEARCH
