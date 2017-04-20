@@ -70,7 +70,7 @@ class Participant < Sequel::Model
 		# puts "PAGE: #{page} || SIZE: #{size}\n\n"
 		# puts "EXT_SEARCH :: #{ext_search.inspect}"
 
-		if ext_search
+		if ext_search && !ext_search.blank?
 			if params[:center_codes]
 				participants = Participant.where("center_code IN ?", params[:center_codes])
 			elsif ext_search[:global]
