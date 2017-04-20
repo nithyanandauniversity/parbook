@@ -73,6 +73,8 @@ class Participant < Sequel::Model
 		if ext_search
 			if params[:center_codes]
 				participants = Participant.where("center_code IN ?", params[:center_codes])
+			elsif ext_search[:global]
+				participants = Participant.order('participants.id')
 			end
 		else
 			if center_code
