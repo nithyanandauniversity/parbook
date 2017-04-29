@@ -104,7 +104,7 @@ module Parbook
 					event_uuid: params[:event_uuid] || nil
 				})
 
-				comment
+				{comments: participant.comments}
 			end
 
 			put "/:id" do
