@@ -25,6 +25,9 @@ role :app, %w{iamsaravana.com}
 role :web, %w{iamsaravana.com}
 role :db,  %w{iamsaravana.com}
 
+set :branch, 'master'
+set :deploy_to, '/var/www/partibook'
+set :rails_env, :production
 
 # Configuration
 # =============
