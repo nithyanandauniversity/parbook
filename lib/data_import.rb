@@ -305,7 +305,7 @@ module DataImport
 			empty_country = !data[:address][:country] || data[:address][:country].to_s.length == 0
 
 			if !empty_country
-				_country = countries_list.select { |c| c[:country] == data[:address][:country] }
+				_country = countries_list.select { |c| c[:name] == data[:address][:country] }
 
 				if _country && _country.length > 0
 					data[:address][:country] = _country[0][:country]
