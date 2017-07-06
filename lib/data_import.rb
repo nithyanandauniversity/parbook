@@ -51,9 +51,9 @@ module DataImport
 
 			begin
 
-				Participant.all.each { |p| p.destroy }
-				ContactNumber.all.each { |c| c.destroy }
-				Address.all.each { |a| a.destroy }
+				# Participant.all.each { |p| p.destroy }
+				# ContactNumber.all.each { |c| c.destroy }
+				# Address.all.each { |a| a.destroy }
 
 				rcount = 0
 				count  = 0
@@ -175,9 +175,9 @@ module DataImport
 			}
 
 			begin
-				Participant.all.each { |p| p.destroy }
-				ContactNumber.all.each { |c| c.destroy }
-				Address.all.each { |a| a.destroy }
+				# Participant.all.each { |p| p.destroy }
+				# ContactNumber.all.each { |c| c.destroy }
+				# Address.all.each { |a| a.destroy }
 
 				rcount = 0
 				count  = 0
