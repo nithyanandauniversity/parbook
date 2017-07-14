@@ -15,8 +15,8 @@ Padrino::Logger::Config[:development][:log_static] = true
 Padrino::Logger::Config[:production][:log_level] = :debug
 Padrino::Logger::Config[:production][:stream]    = :to_file
 
-Padrino::Logger::Config[:staging][:log_level] = :debug
-Padrino::Logger::Config[:staging][:stream]    = :to_file
+# Padrino::Logger::Config[:staging][:log_level] = :debug
+# Padrino::Logger::Config[:staging][:stream]    = :to_file
 #
 # ## Configure Ruby to allow requiring features from your lib folder
 #

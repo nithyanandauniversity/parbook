@@ -264,7 +264,7 @@ module DataImport
 				end
 
 				puts "\n\n#{count} Records Saved / #{rcount} Total Rows"
-				return Participants.generate_error_report(error_records, header)
+				return Participants.generate_error_report_sg(error_records, header)
 
 			rescue Exception => e
 				puts e.inspect
@@ -498,6 +498,33 @@ module DataImport
 		end
 
 		def self.generate_error_report(errors, header)
+			CSV.generate do |csv|
+				header << "ERRORS !"
+				csv << header
+
+				errors.each do |error|
+					row = error[:row]
+
+					message = []
+					message << "Name Cannot be Empty" if error[:data][:empty_name]
+					message << "Email and Contact both cannot be blank" if error[:data][:empty_email_contact]
+					message << "Invalid Email Address" if error[:data][:invalid_email]
+					message << "City and Country cannot be empty" if error[:data][:empty_city_country]
+					message << "Invalid Country name" if error[:data][:invalid_country]
+					message << "Invalid Primary Phone number" if error[:data][:invalid_primary_phone]
+					message << "Wrong Country code for primary contact" if error[:data][:invalid_primary_code]
+					message << "Invalid Secondary Phone number" if error[:data][:invalid_secondary_phone]
+					message << "Wrong Country code for secondary contact" if error[:data][:invalid_secondary_code]
+					message << "Invalid Center information" if error[:data][:invalid_center]
+					message << "DUPLICATE RECORD! The same record already exist in the database" if error[:data][:duplicate_record]
+
+					row << message.join(' | ')
+					csv << row
+				end
+			end
+		end
+
+		def self.generate_error_report_sg(errors, header)
 			CSV.generate do |csv|
 				header << "ERRORS !"
 				csv << header
