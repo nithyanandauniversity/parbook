@@ -338,7 +338,7 @@ module DataImport
 			end
 
 			if !record[:invalid_secondary_phone] && !record[:empty_secondary_phone]
-				record[:invalid_secondary_code] = !dial_codes.include?(primary_contact.scan(codeRegex)[0])
+				record[:invalid_secondary_code] = !dial_codes.include?(secondary_contact.scan(codeRegex)[0])
 			end
 
 			if (!record[:empty_primary_phone] && record[:invalid_primary_phone]) ||
