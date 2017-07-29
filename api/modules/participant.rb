@@ -99,9 +99,9 @@ module Parbook
 
 				comment = Comment.create({
 					participant_uuid: participant.uuid,
-					created_by: params[:created_by],
-					content: params[:content],
-					event_uuid: params[:event_uuid] || nil
+					created_by: params[:comment][:created_by],
+					content: params[:comment][:content],
+					event_uuid: params[:comment][:event_uuid] || nil
 				})
 
 				{comments: participant.comments}
@@ -171,6 +171,16 @@ module Parbook
 				end
 
 				participant
+			end
+
+			put "/:id/comments/:comment_id" do
+
+				participant = Participant.find(member_id: params[:id])
+				comment     = participant.comments.where(id: params[:comment_id])
+
+				comment.update(content: params[:comment][:content])
+
+				{comments: participant.comments}
 			end
 
 			delete "/:id/address/:address_id" do

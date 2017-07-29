@@ -366,6 +366,40 @@ describe "Participant" do
       expect(_participant.comments.count).to eql 1
    end
 
+   it "should be able to edit comment" do
+      post '/api/v1/participant',
+         participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
+         addresses: [
+            {street: "some road", city: "City", country: "SG"},
+            {street: "another one", city: "SG", country: "SG"}
+         ],
+         contacts: [
+            {contact_type: "Home", value: "3342453"},
+            {contact_type: "Mobile", value: "454625363", is_default: true}
+         ]
+
+      resp = JSON.parse(last_response.body)
+      _participant = Participant.find(id: resp["id"])
+
+      post "/api/v1/participant/#{_participant.member_id}/comments", {
+         comment: {
+            content: "first comment"
+         }
+      }
+
+      expect(_participant.comments.all[0].content).to eql "first comment"
+
+      puts _participant.comments.all[0].inspect
+
+      put "/api/v1/participant/#{_participant.member_id}/comments/#{_participant.comments.all[0][:id]}", {
+         comment: {
+            content: "edited comment"
+         }
+      }
+
+      expect(_participant.comments.all[0].content).to eql "edited comment"
+   end
+
    it "should be able to delete comment" do
       post '/api/v1/participant',
          participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
