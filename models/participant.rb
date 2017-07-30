@@ -145,4 +145,11 @@ class Participant < Sequel::Model
 		}]
 	end
 
+
+	def self.download(params)
+		return JSON.parse(Participant.order('participants.id').to_json(:include => :contact))
+	end
+
 end
+
+

@@ -4,7 +4,11 @@ module Parbook
 		namespace "participant" do
 
 			get do
-				return Participant.search(params[:search])
+				if params[:search]
+					return Participant.search(params[:search])
+				elsif params[:download]
+					return Participant.download(params[:download])
+				end
 			end
 
 			get '/:id' do
