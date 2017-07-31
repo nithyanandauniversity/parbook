@@ -147,7 +147,15 @@ class Participant < Sequel::Model
 
 
 	def self.download(params)
-		return JSON.parse(Participant.order('participants.id').to_json(:include => :contact))
+		center_code = params[:center_code] || nil
+
+		if center_code
+			participants = Participant.where(center_code: center_code)
+		else
+			participants = Participant.order('participants.id')
+		end
+
+		return JSON.parse(participants.to_json(:include => :contact))
 	end
 
 end
