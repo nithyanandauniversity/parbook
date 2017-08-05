@@ -56,6 +56,10 @@ class Participant < Sequel::Model
 		}.compact
 	end
 
+	def enricher_names
+		friends.map { |f| "#{f.first_name} #{f.last_name}" }
+	end
+
 
 	def self.search(params)
 
@@ -147,9 +151,10 @@ class Participant < Sequel::Model
 
 
 	def self.download(params)
-		center_code      = params[:center_code] || nil
-		include_address  = params[:with_address] || false
-		include_contacts = params[:with_contacts] || false
+		center_code       = params[:center_code] || nil
+		include_address   = [true, 'true'].include?(params[:with_address]) || false
+		include_contacts  = [true, 'true'].include?(params[:with_contacts]) || false
+		include_enrichers = [true, 'true'].include?(params[:enrichers]) || false
 
 		if center_code
 			participants = Participant.where(center_code: center_code)
@@ -164,6 +169,8 @@ class Participant < Sequel::Model
 		else
 			includes << :contact
 		end
+
+		includes << :enricher_names if include_enrichers
 
 		includes << :address if include_address
 
