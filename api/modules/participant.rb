@@ -200,7 +200,8 @@ module Parbook
 					participant.update({default_address: default_address})
 				end
 
-				{id: params[:id]}
+				# {id: params[:id]}
+				params[:id]
 			end
 
 			delete "/:id/contact/:contact_id" do
@@ -216,7 +217,8 @@ module Parbook
 					participant.update({default_contact: default_contact})
 				end
 
-				{id: params[:id]}
+				# {id: params[:id]}
+				params[:id]
 			end
 
 			delete "/:id/comments/:comment_id" do
