@@ -82,7 +82,7 @@ module Parbook
 			end
 
 			post '/import_file' do
-				file = DataImport::Participants.import(params.creator, params.upload.tempfile, params.centers)
+				file = DataImport::Participants.import("create", params.creator, params.upload.tempfile, params.centers)
 				content_type "application/octet-stream"
 				header['Content-Disposition'] = "attachment; filename=errors_list.csv"
 				# env['api.format'] = :binary
@@ -94,6 +94,14 @@ module Parbook
 				file = DataImport::Participants.import_singapore(params.creator, params.upload.tempfile, params.centers)
 				content_type "application/octet-stream"
 				header['Content-Disposition'] = "attachment; filename=errors_list.csv"
+
+				body file
+			end
+
+			post 'update_file' do
+				file = DataImport::Participants.import("update", params.number, params.upload.tempfile, params.centers)
+				content_type "application/octet-stream"
+				header['Content-Disposition'] = "attachment; filename=update_errors_list.csv"
 
 				body file
 			end

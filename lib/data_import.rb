@@ -22,7 +22,7 @@ module DataImport
 			return DIALCODES_YML['codes'].collect { |d| "(#{d['dial_code']})" }
 		end
 
-		def self.import(creator, file, centers)
+		def self.import(action, creator, file, centers)
 			puts "Module DataImport::Participant.import works !"
 			error_records  = []
 			countries_list = Participants.generate_countries_list()
@@ -94,9 +94,9 @@ module DataImport
 							}.to_json
 
 							participant[:address] = {
-								:street      => row[14],
-								:city        => row[15],
-								:state       => row[16],
+								:street      => row[14].nil? ? '' : row[14].gsub(',','.'),
+								:city        => row[15].nil? ? '' : row[15].gsub(',','.'),
+								:state       => row[16].nil? ? '' : row[16].gsub(',','.'),
 								:postal_code => row[17],
 								:country     => row[18]
 							}
@@ -121,12 +121,18 @@ module DataImport
 							# 6: Empty Center Info / Invalid Center
 							data = Participants.validate_center(data, JSON.parse(centers))
 							# 7: Check Duplicate with first_name / last_name / Email / Contact
-							data = Participants.validate_duplicates(data)
+							data = Participants.validate_duplicates(data) if action == "create"
+							# 7: Check Participant existence if update action
+							data = Participants.validate_existence(data) if action == "update"
 
 							if data[:error] == true
 								error_records << {row: row, data: data}
 							else
-								count += 1 if Participants.save_record(data)
+								if action == "create"
+									count += 1 if Participants.save_record(data)
+								else
+									count += 1 if Participants.update_record(data)
+								end
 							end
 						end
 						rcount += 1
@@ -377,6 +383,15 @@ module DataImport
 			record
 		end
 
+		def self.validate_existence(record)
+			data = record[:participant]
+			participant = Participant.where(member_id: data[:number])
+
+			record[:missing_participant] = participant.count == 0
+			record[:error] = true if record[:missing_participant]
+			record
+		end
+
 
 		def self.save_record(data)
 			puts "SAVING #{data.inspect}\n\n"
@@ -495,6 +510,61 @@ module DataImport
 					created_at: comment['timestamp']
 				})
 			end
+		end
+
+		def self.update_record(data)
+			puts "SAVING #{data.inspect}\n\n"
+			participant = Participant.find(member_id: data[:participant][:number])
+			participant.update(
+				first_name: data[:participant][:first_name],
+				last_name: data[:participant][:last_name],
+				email: data[:participant][:email],
+				gender: data[:participant][:gender],
+				other_names: data[:participant][:other_names],
+				# uuid: SecureRandom.uuid,
+				center_code: data[:participant][:center_code],
+				notes: data[:participant][:notes],
+				created_by: data[:participant][:created_by],
+				participant_attributes: data[:participant][:participant_attributes]
+			)
+
+			default_contact = nil
+			default_address = nil
+
+			if !data[:empty_city_country]
+				Address.where(participant_uuid: participant.uuid).each { |a| a.destroy }
+				address = Address.create(
+					street: data[:participant][:address][:street],
+					city: data[:participant][:address][:city],
+					state: data[:participant][:address][:state],
+					postal_code: data[:participant][:address][:postal_code],
+					country: data[:participant][:address][:country],
+					participant_uuid: participant.uuid
+				)
+				default_address = address.id
+			end
+
+			if !data[:empty_primary_phone] && !data[:invalid_primary_phone]
+				ContactNumber.where(participant_uuid: participant.uuid).each { |c| c.destroy }
+				primary_contact = ContactNumber.create(
+					contact_type: data[:participant][:contact_numbers][0][:contact_type],
+					value: data[:participant][:contact_numbers][0][:value],
+					participant_uuid: participant.uuid
+				)
+				default_contact = primary_contact.id
+			end
+
+			if !data[:empty_secondary_phone] && !data[:invalid_secondary_phone]
+				ContactNumber.create(
+					contact_type: data[:participant][:contact_numbers][1][:contact_type],
+					value: data[:participant][:contact_numbers][1][:value],
+					participant_uuid: participant.uuid
+				)
+			end
+
+			participant.update(default_address: default_address, default_contact: default_contact)
+
+			return true
 		end
 
 		def self.generate_error_report(errors, header)
