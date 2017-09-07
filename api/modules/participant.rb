@@ -15,10 +15,12 @@ module Parbook
 				participant = Participant.find({member_id: params[:id]})
 
 				if participant
-					participant[:contacts]  = participant.contacts
-					participant[:addresses] = participant.addresses
-					participant[:comments]  = participant.comments
-					participant[:friends]   = participant.friends
+					if !params[:basic_only]
+						participant[:contacts]  = participant.contacts
+						participant[:addresses] = participant.addresses
+						participant[:comments]  = participant.comments
+						participant[:friends]   = participant.friends
+					end
 				end
 
 				participant || {}
