@@ -298,7 +298,7 @@ module DataImport
 		def self.validate_email(record)
 			data = record[:participant]
 			# emailRegex = /[a-z0-9](\.?[a-z0-9_-]){0,}@[a-z0-9-]+\.([a-z]{1,6}\.)?[a-z]{2,6}$/i
-			emailRegex = /[a-z0-9](\.?[a-z0-9_-]){0,}@[a-z0-9-\.]+/i
+			emailRegex = /[a-z0-9](\.?[a-z0-9_-]){0,}@[a-z0-9\-\.]+/i
 
 			record[:invalid_email] = data[:email] && data[:email].to_s.length > 0 && (data[:email] =~ emailRegex).nil?
 			record[:error] = true if record[:invalid_email]
@@ -320,7 +320,7 @@ module DataImport
 				end
 			end
 
-			record[:empty_city_country] = empty_city && empty_country
+			record[:empty_city_country] = empty_city || empty_country
 			record[:error] = true if record[:empty_city_country] || record[:invalid_country]
 			record
 		end
@@ -524,7 +524,7 @@ module DataImport
 				# uuid: SecureRandom.uuid,
 				center_code: data[:participant][:center_code],
 				notes: data[:participant][:notes],
-				created_by: data[:participant][:created_by],
+				# created_by: data[:participant][:created_by],
 				participant_attributes: data[:participant][:participant_attributes]
 			)
 
