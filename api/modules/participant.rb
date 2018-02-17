@@ -197,7 +197,7 @@ module Parbook
 				{comments: participant.comments}
 			end
 
-			delete "/:id/address/:address_id" do
+			delete "/:id/addresses/:address_id" do
 				participant = Participant.find(member_id: params[:id])
 				_address = participant.addresses.where({id: params[:address_id]}).first
 
@@ -214,7 +214,7 @@ module Parbook
 				params[:id]
 			end
 
-			delete "/:id/contact/:contact_id" do
+			delete "/:id/contacts/:contact_id" do
 				participant = Participant.find(member_id: params[:id])
 				_contact = participant.contacts.where({id: params[:contact_id]}).first
 
