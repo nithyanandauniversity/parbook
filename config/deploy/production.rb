@@ -25,7 +25,7 @@ role :app, %w{globaltof.nithyananda.org}
 role :web, %w{globaltof.nithyananda.org}
 role :db,  %w{globaltof.nithyananda.org}
 
-set :branch, 'release_1.0.0-beta'
+set :branch, 'production_1.0.1'
 set :deploy_to, '/var/www/lifebook'
 set :rails_env, :production
 
