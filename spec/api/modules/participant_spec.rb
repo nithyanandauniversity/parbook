@@ -36,6 +36,21 @@ describe "Participant" do
       expect(participant.friends.length).to eql 2
    end
 
+   it "should have created full name attribute with first and last names" do
+      post '/api/v1/participant', participant: {
+         first_name:"Saravana",
+         last_name:"B",
+         email: "sgsaravana@gmail.com",
+         uuid: SecureRandom.uuid
+      }
+
+      resp = JSON.parse(last_response.body)
+
+      expect(resp["first_name"]).to eql("Saravana")
+      expect(resp["last_name"]).to eql("B")
+      expect(resp["full_name"]).to eql("Saravana B")
+   end
+
    it "should be able to add address and contacts" do
 
       post '/api/v1/participant',
@@ -293,7 +308,7 @@ describe "Participant" do
 
       address = _participant.addresses.last
 
-      delete "/api/v1/participant/#{_participant.member_id}/address/#{address.id}"
+      delete "/api/v1/participant/#{_participant.member_id}/addresses/#{address.id}"
 
       participant = Participant.find(id: _participant.id)
 
@@ -303,7 +318,7 @@ describe "Participant" do
 
       contact_id = _participant.contacts.last.id
 
-      delete "/api/v1/participant/#{_participant.member_id}/contact/#{contact_id}"
+      delete "/api/v1/participant/#{_participant.member_id}/contacts/#{contact_id}"
       participant = Participant.find(id: _participant.id)
 
       expect(participant.contacts.count).to eql 1

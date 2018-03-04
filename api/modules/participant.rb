@@ -29,8 +29,13 @@ module Parbook
 			post do
 				participant = Participant.create(params[:participant])
 				uuid        = SecureRandom.uuid
+				full_name   = [participant.first_name || "", participant.last_name || ""].join(' ')
 				member_id   = participant.created_at.strftime('%Y%m%d') + '-' + SecureRandom.hex(4)
-				participant.update({uuid: uuid, member_id: member_id})
+				participant.update({
+					full_name: full_name,
+					uuid: uuid,
+					member_id: member_id
+				})
 				default_update = {}
 
 				if params[:addresses]
