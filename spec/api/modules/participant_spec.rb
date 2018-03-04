@@ -109,6 +109,35 @@ describe "Participant" do
       expect(response[0]['first_name']).to eql "Senthuran"
    end
 
+   it "should be able to search participant by full name" do
+      Participant.all.each { |p| p.destroy }
+
+      post '/api/v1/participant', participant: {
+         first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017"
+      }
+
+      post '/api/v1/participant', participant: {
+         first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1017"
+      }
+
+      post '/api/v1/participant', participant: {
+         first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1018"
+      }
+
+
+      get "/api/v1/participant", search: {
+         page: 1,
+         limit: 10,
+         keyword: 'Senthuran Ponn',
+         center_code: "1017"
+      }
+
+      response = JSON.parse(last_response.body)[0]['participants']
+
+      expect(response.length).to eql 1
+      expect(response[0]['email']).to eql "psenthu@gmail.com"
+   end
+
    it "should be able to search by name or email case - insensitively" do
       Participant.all.each { |p| p.destroy }
 

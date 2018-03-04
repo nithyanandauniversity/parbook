@@ -104,6 +104,7 @@ class Participant < Sequel::Model
 					participants = participants.where(
 						(Sequel.ilike(:first_name, "%#{keyword}%")) |
 						(Sequel.ilike(:last_name, "%#{keyword}%")) |
+						(Sequel.ilike(:full_name, "%#{keyword}%")) |
 						(Sequel.ilike(:other_names, "%#{keyword}%")) |
 						(Sequel.ilike(:email, "%#{keyword}%")) |
 						(Sequel.ilike(:participant_attributes, "%#{attributes.join('%')}%"))
@@ -116,6 +117,7 @@ class Participant < Sequel::Model
 					participants = participants.where(
 						(Sequel.ilike(:first_name, "%#{keyword}%")) |
 						(Sequel.ilike(:last_name, "%#{keyword}%")) |
+						(Sequel.ilike(:full_name, "%#{keyword}%")) |
 						(Sequel.ilike(:other_names, "%#{keyword}%")) |
 						(Sequel.ilike(:email, "%#{keyword}%"))
 					)
