@@ -152,6 +152,31 @@ class Participant < Sequel::Model
 	end
 
 
+	def self.merge(id, data)
+		participant = Participant.find(member_id: id)
+
+		Sequel::Model.db.transaction do
+			participant.update(first_name: data[:master_record][:first_name]) if data[:master_record][:first_name]
+			participant.update(last_name: data[:master_record][:last_name]) if data[:master_record][:last_name]
+			participant.update(email: data[:master_record][:email]) if data[:master_record][:email]
+			participant.update(other_names: data[:master_record][:other_names]) if data[:master_record][:other_names]
+			participant.update(center_code: data[:master_record][:center_code]) if data[:master_record][:center_code]
+
+			if data[:master_record][:first_name] || data[:master_record][:last_name]
+				full_name = [participant.first_name || "", participant.last_name || ""].join(' ')
+				participant.update(full_name: full_name)
+			end
+
+			self.merge_contacts(participant[:uuid], data[:contact_ids]) if data[:contact_ids]
+			self.merge_addresses(participant[:uuid], data[:address_ids]) if data[:address_ids]
+			self.merge_friends(participant[:member_id], data[:merge_ids])
+			self.merge_comments(participant[:uuid], data[:merge_ids])
+		end
+
+		participant
+	end
+
+
 	def self.download(params)
 		center_code       = params[:center_code] || nil
 		include_address   = [true, 'true'].include?(params[:with_address]) || false
@@ -177,6 +202,45 @@ class Participant < Sequel::Model
 		includes << :address if include_address
 
 		return JSON.parse(participants.to_json(:include => includes))
+	end
+
+	private
+
+	def self.merge_contacts(uuid, contacts)
+		contacts.each do |id|
+			contact = ContactNumber.find(id: id)
+			contact.update(participant_uuid: uuid)
+			contact.save
+		end
+	end
+
+	def self.merge_addresses(uuid, addresses)
+		addresses.each do |id|
+			address = Address.find(id: id)
+			address.update(participant_uuid: uuid)
+			address.save
+		end
+	end
+
+	def self.merge_friends(member_id, merge_ids)
+		merge_ids.each do | _member_id |
+			ParticipantFriend.where(participant_id: _member_id).each do |_friend|
+				if ParticipantFriend.where(participant_id: member_id, friend_id: _friend.friend_id).count > 0
+					_friend.delete
+				else
+					_friend.update(participant_id: member_id)
+				end
+			end
+		end
+	end
+
+	def self.merge_comments(uuid, merge_ids)
+		merge_ids.each do |_member_id|
+			_participant = Participant.find(member_id: _member_id)
+			Comment.where(participant_uuid: _participant.uuid).each do |comment|
+				comment.update(participant_uuid: uuid)
+			end
+		end
 	end
 
 end
