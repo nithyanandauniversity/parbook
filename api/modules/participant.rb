@@ -202,6 +202,17 @@ module Parbook
 				{comments: participant.comments}
 			end
 
+			put "/:id/merge/:merge_id" do
+				master = Participant.find(member_id: params[:id])
+
+				if master
+					participant = Participant.merge(params[:id], params[:merge_data])
+					return participant
+				else
+					return master
+				end
+			end
+
 			delete "/:id/addresses/:address_id" do
 				participant = Participant.find(member_id: params[:id])
 				_address = participant.addresses.where({id: params[:address_id]}).first
@@ -241,6 +252,15 @@ module Parbook
 
 				comment = participant.comments.where(id: params[:comment_id])
 				comment.destroy
+			end
+
+			post "/bulk_delete" do
+				if params[:participants] && params[:participants].length
+					res = Participant.where(member_id: params[:participants]).delete
+					{count: res}
+				else
+					{count: 0}
+				end
 			end
 
 			delete "/:id" do
