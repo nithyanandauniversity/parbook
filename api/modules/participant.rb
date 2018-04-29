@@ -254,6 +254,15 @@ module Parbook
 				comment.destroy
 			end
 
+			post "/bulk_delete" do
+				if params[:participants] && params[:participants].length
+					res = Participant.where(member_id: params[:participants]).delete
+					{count: res}
+				else
+					{count: 0}
+				end
+			end
+
 			delete "/:id" do
 				unless params[:id] == "delete_all"
 					participant = Participant.find(member_id: params[:id])

@@ -384,6 +384,26 @@ describe "Participant" do
       expect(ContactNumber.where(participant_uuid: _participant.uuid).count).to eql 0
    end
 
+   it "should be able to delete multiple participants as bulk" do
+      Participant.all.each { |p| p.destroy }
+
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", member_id: "11111111", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017", uuid: SecureRandom.uuid)
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", member_id: "22222222", email: "psenthu@gmail.com", gender: "Male", center_code: "1017", uuid: SecureRandom.uuid)
+      user3 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", member_id: "33333333", email: "psenthu@gmail.com", gender: "Male", center_code: "1018", uuid: SecureRandom.uuid)
+      user4 = Participant.create(first_name: "Senthuran", last_name: "P", member_id: "44444444", email: "psenthu@gmail.com", gender: "Male", center_code: "1018", uuid: SecureRandom.uuid)
+
+      expect(Participant.count).to eql 4
+
+      post "/api/v1/participant/bulk_delete", {
+         participants: [user1.member_id, user2.member_id, user3.member_id]
+      }
+
+      response = JSON.parse(last_response.body)
+
+      expect(response['count']).to eql 3
+      expect(Participant.count).to eql 1
+   end
+
    it "should be able to add comment for participant" do
       post '/api/v1/participant',
          participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
@@ -566,7 +586,7 @@ describe "Participant" do
 
       put "/api/v1/participant/#{participant.member_id}/merge/#{participant.member_id}", {
          merge_data: {
-            master_record: {first_name: "Nithya Shreshthananda", last_name: "",},
+            master_record: {first_name: "Nithya Shreshthananda", last_name: ""},
             address_ids: [dup2.addresses.last.id],
             contact_ids: [dup1.contacts.first.id, dup2.contacts.first.id],
             merge_ids: [dup1.member_id, dup2.member_id]
