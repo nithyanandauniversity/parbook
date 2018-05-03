@@ -76,13 +76,15 @@ class Participant < Sequel::Model
 
 		if ext_search && !ext_search.blank?
 			if params[:center_codes]
-				participants = Participant.where("center_code IN ?", params[:center_codes])
+				multiple_centers = params[:center_codes]
+				participants     = Participant.where("center_code IN ?", params[:center_codes])
 			elsif ext_search[:global]
 				participants = Participant.order('participants.id')
 			end
 		else
 			if center_code
-				participants = Participant.where(center_code: center_code)
+				single_center = center_code
+				participants  = Participant.where(center_code: center_code)
 			else
 				participants = Participant.order('participants.id')
 			end
@@ -96,7 +98,13 @@ class Participant < Sequel::Model
 				contact_uuids = ContactNumber.where(
 					(Sequel.like(:value, "%#{keyword}%"))
 				).map { |contact|
-					contact.participant_uuid if contact.participant
+					if contact.participant &&
+						(
+							single_center && contact.participant.center_code == single_center ||
+							multiple_centers && multiple_centers.indexOf(contact.participant) >=0
+						)
+						contact.participant_uuid
+					end
 				}.compact
 
 				if attributes && !attributes.blank?
