@@ -6,6 +6,8 @@ module Parbook
 			get do
 				if params[:search]
 					return Participant.search(params[:search])
+				elsif params[:member_ids]
+					return Participant.where('member_id IN ?', params[:member_ids])
 				elsif params[:download]
 					return Participant.download(params[:download])
 				end

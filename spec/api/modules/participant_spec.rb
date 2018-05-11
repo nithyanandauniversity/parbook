@@ -89,12 +89,37 @@ describe "Participant" do
       expect(participant.contact.value).to eql("454625363")
    end
 
+   it "should be able to get participant by id" do
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017", member_id: "erg35grf")
+
+      get "/api/v1/participant/#{user1.member_id}"
+
+      response = JSON.parse(last_response.body)
+
+      expect(response['first_name']).to eql user1.first_name
+      expect(response['member_id']).to eql user1.member_id
+   end
+
+   it "should be able to get multiple participants with member_id" do
+      user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017", member_id: "1w2e3r")
+      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1017", member_id: "2e3r4t")
+      user3 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1018", member_id: "3r4t5y")
+
+      get "/api/v1/participant", member_ids: [user1.member_id, user2.member_id]
+
+      response = JSON.parse(last_response.body)
+
+      expect(response.length).to eql 2
+      expect(response[0]['member_id']).to eql user1.member_id
+      expect(response[1]['member_id']).to eql user2.member_id
+   end
+
    it "should be able to search participant by name or email" do
       Participant.all.each { |p| p.destroy }
 
       user1 = Participant.create(first_name: "Saravana", last_name: "Balaraj", email: "sgsaravana@gmail.com", gender: "Male", center_code: "1017")
       user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1017")
-      user2 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1018")
+      user3 = Participant.create(first_name: "Senthuran", last_name: "Ponnampalam", email: "psenthu@gmail.com", gender: "Male", center_code: "1018")
 
       get "/api/v1/participant", search: {
          page: 1,
@@ -208,7 +233,7 @@ describe "Participant" do
       Participant.all.each { |p| p.destroy }
 
       post '/api/v1/participant',
-         participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid},
+         participant: {first_name:"Saravana", email: "sgsaravana@gmail.com", uuid: SecureRandom.uuid, center_code: '111'},
          addresses: [
             {street: "some road", city: "City", country: "SG"},
             {street: "another one", city: "SG", country: "SG"}
@@ -219,7 +244,7 @@ describe "Participant" do
          ]
 
       post '/api/v1/participant',
-         participant: {first_name:"Senthuran", email: "psenthu@gmail.com", uuid: SecureRandom.uuid},
+         participant: {first_name:"Senthuran", email: "psenthu@gmail.com", uuid: SecureRandom.uuid, center_code: '111'},
          addresses: [
             {street: "some road", city: "Singapore", country: "SG"},
             {street: "another one", city: "Colombo", country: "Sri Lanka"}
@@ -234,6 +259,7 @@ describe "Participant" do
       get "/api/v1/participant", search: {
          page: 1,
          limit: 10,
+         center_code: '111',
          keyword: '33424'
       }
 
